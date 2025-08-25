@@ -1,0 +1,924 @@
+// -----------------------------------------------------------------------------
+// pubspec.yaml
+// -----------------------------------------------------------------------------
+// Asegúrate de añadir estas dependencias en tu archivo pubspec.yaml
+// y luego ejecuta 'flutter pub get' en tu terminal.
+// Las versiones pueden variar, usa las más recientes compatibles.
+
+/*
+dependencies:
+  flutter:
+    sdk: flutter
+  riverpod: ^2.5.0 # Para gestión de estado, según la arquitectura propuesta
+  http: ^1.2.0  # Para llamadas a la API de OpenAI
+  flutter_blue_plus: ^1.0.0  # Para BLE, considera flutter_blue_background para optimización en segundo plano [span_0](start_span)[span_0](end_span)[span_2](start_span)[span_2](end_span)
+  ar_flutter_plugin: ^0.7.0  # Para Realidad Aumentada [span_4](start_span)[span_4](end_span)[span_5](start_span)[span_5](end_span)
+  hive: ^2.2.0  # Para almacenamiento local encriptado 
+  firebase_core: ^3.0.0 # Inicialización de Firebase
+  cloud_firestore: ^5.0.0 # Base de datos Firestore
+  firebase_auth: ^5.0.0 # Autenticación de Firebase
+  tensorflow_lite_flutter: ^0.10.0  # IA local (TFLite)
+  web3dart: ^2.7.0  # Para funcionalidades descentralizadas (Web3)
+  grpc: ^3.2.0 # Para comunicación en tiempo real de alto rendimiento [span_6](start_span)[span_6](end_span)
+  protobuf: ^3.0.0 # Necesario para gRPC
+  permission_handler: ^11.0.0 # Para gestionar permisos de forma contextual 
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  hive_generator: ^2.0.0
+  build_runner: ^2.0.0
+*/
+
+// -----------------------------------------------------------------------------
+// main.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frecuencia_vital/screens/home_screen.dart';
+import 'package:frecuencia_vital/firebase_options.dart'; // Generado por FlutterFire CLI
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Inicializa Firebase. Asegúrate de haber configurado tu proyecto Firebase
+  // y generado el archivo firebase_options.dart con 'flutterfire configure'.
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(
+    // Riverpod ProviderScope para gestión de estado global
+    const ProviderScope(
+      child: FrecuenciaVitalApp(),
+    ),
+  );
+}
+
+class FrecuenciaVitalApp extends StatelessWidget {
+  const FrecuenciaVitalApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Frecuencia Vital',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        // Paleta de colores: tonos azules profundos, morados y blancos 
+        scaffoldBackgroundColor: const Color(0xFF1A2138), // Azul oscuro
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: Colors.white,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFF242A44),
+          unselectedItemColor: Colors.white60,
+          selectedItemColor: Colors.lightBlueAccent,
+          type: BottomNavigationBarType.fixed,
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+          titleLarge: TextStyle(color: Colors.white, fontSize: 24),
+        ),
+      ),
+      home: const HomeScreen(),
+      // Define tus rutas aquí
+      routes: {
+        '/fisico': (context) => const FisicoScreen(),
+        '/emocional': (context) => const EmocionalScreen(),
+        '/entorno': (context) => const EntornoScreen(),
+        '/perfil': (context) => const PerfilScreen(),
+      },
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/models/ (Placeholder para modelos de datos)
+// -----------------------------------------------------------------------------
+// Define tus clases de modelos de datos aquí (e.g., Sesion, Frecuencia, Usuario)
+// Siguiendo la estructura de carpetas propuesta 
+
+/*
+// lib/models/sesion.dart
+class Sesion {
+  final String id;
+  final DateTime timestamp;
+  final double frecuenciaDetectada;
+  final String patronAsociado;
+  final List<double> frecuenciasSugeridas;
+  final String feedbackUsuario; // Para el bucle de retroalimentación de IA 
+
+  Sesion({
+    required this.id,
+    required this.timestamp,
+    required this.frecuenciaDetectada,
+    required this.patronAsociado,
+    required this.frecuenciasSugeridas,
+    required this.feedbackUsuario,
+  });
+
+  // Métodos para serialización/deserialización a/desde JSON (Firestore/Hive)
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'timestamp': timestamp.toIso8601String(),
+        'frecuenciaDetectada': frecuenciaDetectada,
+        'patronAsociado': patronAsociado,
+        'frecuenciasSugeridas': frecuenciasSugeridas,
+        'feedbackUsuario': feedbackUsuario,
+      };
+
+  factory Sesion.fromJson(Map<String, dynamic> json) => Sesion(
+        id: json['id'],
+        timestamp: DateTime.parse(json['timestamp']),
+        frecuenciaDetectada: json,
+        patronAsociado: json['patronAsociado'],
+        frecuenciasSugeridas: List<double>.from(json),
+        feedbackUsuario: json['feedbackUsuario'],
+      );
+}
+
+// lib/models/usuario.dart
+class Usuario {
+  final String id;
+  final String nombre;
+  final String email;
+  // Otros datos de perfil, historial de sesiones, etc.
+  Usuario({required this.id, required this.nombre, required this.email});
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'nombre': nombre,
+        'email': email,
+      };
+
+  factory Usuario.fromJson(Map<String, dynamic> json) => Usuario(
+        id: json['id'],
+        nombre: json['nombre'],
+        email: json['email'],
+      );
+}
+*/
+
+// -----------------------------------------------------------------------------
+// lib/utils/error_handler.dart
+// -----------------------------------------------------------------------------
+// Un manejador de errores básico para reintentos y robustez 
+class ErrorHandler {
+  static Future<T> retry<T>(Future<T> Function() operation, {int retries = 3, Duration delay = const Duration(seconds: 1)}) async {
+    for (int i = 0; i < retries; i++) {
+      try {
+        return await operation();
+      } catch (e) {
+        if (i == retries - 1) rethrow;
+        await Future.delayed(delay);
+      }
+    }
+    throw Exception('Operation failed after $retries retries.');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/sensores_service.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:tensorflow_lite_flutter/tensorflow_lite_flutter.dart';
+import 'dart:math' as math;
+import 'package:permission_handler/permission_handler.dart'; // Para gestionar permisos 
+import 'package:frecuencia_vital/utils/error_handler.dart';
+
+class SensoresService {
+  // Considera usar flutter_blue_background para una mejor optimización de batería en segundo plano [span_1](start_span)[span_1](end_span)[span_3](start_span)[span_3](end_span)
+  // y para una estrategia de solicitud de permisos contextual y gradual 
+
+  Future<void> requestBlePermissions() async {
+    // Solicita permisos de BLE de forma contextual 
+    var bluetoothScanStatus = await Permission.bluetoothScan.request();
+    var bluetoothConnectStatus = await Permission.bluetoothConnect.request();
+    var locationStatus = await Permission.locationWhenInUse.request(); // ACCESS_FINE_LOCATION
+
+    if (bluetoothScanStatus.isDenied |
+
+| bluetoothConnectStatus.isDenied |
+| locationStatus.isDenied) {
+      // Manejar el caso donde los permisos son denegados
+      throw Exception("Permisos de Bluetooth o Ubicación denegados. La funcionalidad BLE no estará disponible.");
+    }
+  }
+
+  Future<double> capturarFrecuenciaBLE() async {
+    await requestBlePermissions(); // Solicitar permisos antes de escanear 
+
+    return ErrorHandler.retry(() async {
+      // Lógica de escaneo y conexión BLE (simplificada)
+      // En una aplicación real, esto implicaría escanear, filtrar dispositivos,
+      // conectar y leer características específicas.
+      FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+      var scanResults = FlutterBluePlus.scanResults;
+      await for (var result in scanResults) {
+        if (result.device.platformName.contains('GPTwacht')) { // Ejemplo de filtrado 
+          await result.device.connect();
+          // Detener el escaneo una vez que se encuentra el dispositivo para ahorrar batería [span_8](start_span)[span_8](end_span)
+          FlutterBluePlus.stopScan();
+          // Simulación de lectura de característica
+          // var characteristic = result.device.services.first.characteristics.first;
+          // var data = await characteristic.read();
+          // return _procesarFFT(data);
+          return _procesarFFT(); // Datos de ejemplo
+        }
+      }
+      throw Exception("Dispositivo BLE no encontrado.");
+    });
+  }
+
+  double _procesarFFT(List<int> data) {
+    // Simulación de procesamiento FFT con TFLite (carga modelo) 
+    // En una implementación real, cargarías tu modelo.tflite y realizarías la inferencia.
+    // Asegúrate de que tu modelo TFLite cumpla con los requisitos de compatibilidad [span_9](start_span)[span_9](end_span)
+    try {
+      // var interpreter = Interpreter.fromAsset('models/fft_model.tflite');
+      // var input = data.map((e) =>).toList();
+      // var output = [List.filled(1, 0.0)];
+      // interpreter.run(input, output);
+      // interpreter.close();
+      // return output; // Frecuencia dominante
+      return data.reduce((a, b) => a + b) / data.length.toDouble(); // Simulación simple
+    } catch (e) {
+      print("Error procesando FFT con TFLite: $e");
+      return 432.0; // Fallback
+    }
+  }
+
+  // Otros métodos para integrar ECG/HC, EEG, GSR/Thermometría 
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/orquestacion_local.dart
+// -----------------------------------------------------------------------------
+import 'package:hive/hive.dart';
+import 'package:tensorflow_lite_flutter/tensorflow_lite_flutter.dart';
+import 'package:frecuencia_vital/utils/error_handler.dart';
+
+class OrquestacionLocal {
+  late Box _hiveBox;
+  Interpreter? _interpreter;
+
+  Future<void> init() async {
+    // Inicializa Hive. Considera la encriptación para datos sensibles 
+    // Hive.init(path); // Si necesitas una ruta específica
+    _hiveBox = await Hive.openBox('frecuencias_vitales', encryptionCipher: HiveAesCipher(_getEncryptionKey()));
+    // Carga el modelo TFLite para predicción local 
+    try {
+      _interpreter = await Interpreter.fromAsset('models/patron_model.tflite');
+    } catch (e) {
+      print("Error cargando modelo TFLite local: $e");
+    }
+  }
+
+  List<int> _getEncryptionKey() {
+    // Implementa una forma segura de obtener o generar tu clave de encriptación.
+    // NO codifiques la clave aquí en producción. Usa flutter_secure_storage o similar. 
+    return List<int>.generate(32, (i) => i); // Clave de ejemplo (NO USAR EN PRODUCCIÓN)
+  }
+
+  Future<void> almacenarPatron(double freq, String patron) async {
+    await ErrorHandler.retry(() async {
+      await _hiveBox.put(DateTime.now().toIso8601String(), {'freq': freq, 'patron': patron});
+    });
+  }
+
+  Future<String> predecirPatron(List<double> freqs) async {
+    if (_interpreter == null) return 'patrón default (modelo no cargado)';
+    return ErrorHandler.retry(() async {
+      try {
+        var input = [freqs];
+        var output = [List.filled(1, 'desconocido')];
+        _interpreter!.run(input, output);
+        return output; // e.g., 'ansiedad' o 'armonía'
+      } catch (e) {
+        print("Error en la predicción TFLite: $e");
+        return 'patrón default'; // Fallback
+      }
+    });
+  }
+
+  void guardianCognitivo(double bateriaNivel) {
+    // Lógica del Guardián Cognitivo para ajustar UI/optimizar recursos 
+    if (bateriaNivel < 20) {
+      print("Nivel de batería bajo. Reduciendo animaciones y optimizando.");
+      // Aquí se implementaría la lógica para reducir animaciones, desactivar RA, etc.
+    }
+  }
+
+  void dispose() {
+    _interpreter?.close();
+    Hive.close();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/conexion_global.dart
+// -----------------------------------------------------------------------------
+// Agrega dependency: grpc: ^3.2.0 y protobuf: ^3.0.0
+import 'package:grpc/grpc.dart';
+import 'dart:math' as math;
+import 'package:frecuencia_vital/utils/error_handler.dart';
+
+// Importa los archivos.proto generados (ejemplo)
+// import 'package:frecuencia_vital/proto/frecuencias.pb.dart';
+// import 'package:frecuencia_vital/proto/frecuencias.grpc.dart';
+
+class ConexionGlobal {
+  ClientChannel? _channel;
+  // FrecuenciasServiceClient? _stub; // Si usas un stub gRPC
+
+  void init() {
+    // Configura el canal gRPC. Asegúrate de que 'tu-servidor.firebase' sea tu endpoint gRPC real.
+    // Considera la latencia y la complejidad vs. Firebase Realtime Database [span_10](start_span)[span_10](end_span)[span_11](start_span)[span_11](end_span)
+    _channel = ClientChannel(
+      'tu-servidor.firebase', // Reemplaza con tu host gRPC
+      port: 443,
+      options: const ChannelOptions(credentials: ChannelCredentials.secure()),
+    );
+    // _stub = FrecuenciasServiceClient(_channel!); // Inicializa el stub
+  }
+
+  Stream<double> streamFrecuenciasGlobales() {
+    // Lógica de gRPC stream (define proto para frecuencias) [span_7](start_span)[span_7](end_span)
+    // Esto es un placeholder. En una implementación real, usarías el stub gRPC.
+    return Stream.periodic(const Duration(seconds: 5), (i) => math.Random().nextDouble() * 1000);
+    // return _stub!.obtenerFrecuenciasGlobales(Stream.empty()); // Ejemplo de uso de stub
+  }
+
+  Future<void> dispose() async {
+    await _channel?.shutdown();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/backend_service.dart
+// -----------------------------------------------------------------------------
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:frecuencia_vital/utils/error_handler.dart';
+// import 'package:frecuencia_vital/models/sesion.dart'; // Si defines tu modelo Sesion
+
+class BackendService {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Asegura que las reglas de seguridad de Firestore apliquen RBAC y segmentación de PHI [span_12](start_span)[span_12](end_span)[span_13](start_span)[span_13](end_span)
+  // y que se obtengan BAAs con Firebase [span_14](start_span)[span_14](end_span)[span_15](start_span)[span_15](end_span)
+
+  Future<void> sincronizarFrecuencia(double freq, String patron) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception("Usuario no autenticado.");
+    }
+
+    // Estrategia para prevenir hotspotting en datos de series temporales [span_16](start_span)[span_16](end_span)
+    // Usar un ID de documento compuesto o hashed para distribuir escrituras.
+    final docId = '${user.uid}_${DateTime.now().microsecondsSinceEpoch}';
+
+    await ErrorHandler.retry(() async {
+      await _db.collection('frecuencias_usuario').doc(user.uid).collection('sesiones').doc(docId).set({
+        'freq': freq,
+        'patron': patron,
+        'timestamp': FieldValue.serverTimestamp(), // Usa timestamp del servidor
+        'userId': user.uid,
+      });
+    });
+  }
+
+  Future<List<String>> matchmaking(String patron) async {
+    // Llama a una Cloud Function para matchmaking (ejemplo)
+    // Esto asegura que la lógica sensible se ejecute en el servidor 
+    return ErrorHandler.retry(() async {
+      // final result = await FirebaseFunctions.instance.httpsCallable('matchmakingFunction').call({'patron': patron});
+      // return List<String>.from(result.data['matches']);
+      return ['user_match1', 'user_match2']; // Placeholder
+    });
+  }
+
+  Future<void> registrarUsuario(String email, String password) async {
+    await ErrorHandler.retry(() async {
+      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      // Configurar RBAC y MFA para usuarios [span_17](start_span)[span_17](end_span)
+    });
+  }
+
+  Future<void> iniciarSesion(String email, String password) async {
+    await ErrorHandler.retry(() async {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+    });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/descentralizado_service.dart
+// -----------------------------------------------------------------------------
+// Agrega dependency: web3dart: ^2.7.0
+import 'package:web3dart/web3dart.dart';
+import 'package:http/http.dart'; // Para Web3Client
+import 'package:frecuencia_vital/utils/error_handler.dart';
+
+class DescentralizadoService {
+  late Web3Client _client;
+
+  void init() {
+    // Inicializa Web3Client. Reemplaza con tu endpoint de nodo Ethereum/blockchain.
+    // Considera la integración de herramientas de análisis estático para contratos inteligentes [span_18](start_span)[span_18](end_span)[span_19](start_span)[span_19](end_span)[span_20](start_span)[span_20](end_span)
+    _client = Web3Client('https://infura.io/tu-proyecto', Client()); // Reemplaza con tu URL de Infura/nodo
+  }
+
+  Future<void> registrarAccesoPremium(String userAddress) async {
+    await ErrorHandler.retry(() async {
+      // Ejemplo de interacción con un contrato inteligente
+      // var contract = DeployedContract(ContractAbi.fromJson('abi_json', 'contract_name'), EthereumAddress.fromHex('0x...'));
+      // final function = contract.function('registrarPremium');
+      // final credentials = EthPrivateKey.fromHex('tu_clave_privada'); // NO USAR EN PRODUCCIÓN DIRECTAMENTE
+      // final transaction = Transaction.callContract(
+      //   contract: contract,
+      //   function: function,
+      //   parameters: [EthereumAddress.fromHex(userAddress)],
+      // );
+      // await _client.sendTransaction(credentials, transaction, chainId: 1); // Reemplaza chainId
+      print("Acceso premium registrado para $userAddress (simulado)");
+    });
+  }
+
+  Future<void> dispose() async {
+    _client.dispose();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/datos_externos_service.dart
+// -----------------------------------------------------------------------------
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:frecuencia_vital/utils/error_handler.dart';
+
+class DatosExternosService {
+  Future<double> getResonanciaSchumann() async {
+    return ErrorHandler.retry(() async {
+      // Reemplaza con una API real de resonancia Schumann si está disponible
+      var response = await http.get(Uri.parse('https://api.resonancia-schumann.com/current'));
+      if (response.statusCode == 200) {
+        // Asume que la API devuelve un JSON con un campo 'frequency'
+        final data = jsonDecode(response.body);
+        return data['frequency']?.toDouble()?? 7.83; // Frecuencia Hz, default Schumann 
+      }
+      throw Exception('Fallo al cargar la resonancia Schumann: ${response.statusCode}');
+    });
+  }
+
+  // Otros métodos para integrar APIs de clima, geo, etc. 
+}
+
+// -----------------------------------------------------------------------------
+// lib/services/openai_service.dart
+// -----------------------------------------------------------------------------
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:frecuencia_vital/utils/error_handler.dart';
+
+class OpenAIService {
+  // NOTA CRÍTICA DE SEGURIDAD:
+  // Las claves API de OpenAI NUNCA deben estar en el código del cliente. [span_21](start_span)[span_21](end_span)[span_22](start_span)[span_22](end_span)[span_23](start_span)[span_23](end_span)[span_24](start_span)[span_24](end_span)[span_25](start_span)[span_25](end_span)
+  // Deben ser accedidas a través de un proxy del lado del servidor (ej. Firebase Cloud Functions).
+  // Este ejemplo simula la llamada a un proxy.
+  final String _proxyUrl = 'https://tu-dominio.cloudfunctions.net/openaiProxy'; // Reemplaza con tu URL de Cloud Function
+
+  Future<String> retroalimentacionPersonal(String patronUsuario, List<double> freqs) async {
+    return ErrorHandler.retry(() async {
+      var url = Uri.parse(_proxyUrl);
+      var response = await http.post(url,
+        headers: {
+          'Content-Type': 'application/json',
+          // No se envía la clave API de OpenAI directamente desde aquí.
+          // El proxy del servidor se encarga de la autenticación con OpenAI.
+        },
+        body: jsonEncode({
+          'model': 'gpt-4o', // Modelo 2025 eficiente 
+          'messages':, "duracion_minutos": [numero], "confianza": "alta|media|baja", "exencion_responsabilidad": "texto"}'},
+          ],
+          // Usar Structured Outputs para respuestas predecibles [span_26](start_span)[span_26](end_span)[span_27](start_span)[span_27](end_span)[span_28](start_span)[span_28](end_span)
+          'response_format': {'type': 'json_object', 'schema': _getRecommendationSchema()},
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        // Validar la salida JSON contra el esquema para seguridad 
+        if (data['choices']!= null && data['choices'].isNotEmpty && data['choices']['message']!= null) {
+          final content = data['choices']['message']['content'];
+          // Parsear y validar el JSON estructurado
+          try {
+            final parsedContent = jsonDecode(content);
+            // Aquí puedes acceder a parsedContent['sugerencia'], parsedContent['frecuencia_hz'], etc.
+            // Implementa validación estricta para asegurar que los valores sean seguros y válidos para la salud.
+            return parsedContent['sugerencia']?? 'Sugerencia default: 432 Hz';
+          } catch (e) {
+            print("Error al parsear la salida JSON de OpenAI: $e. Contenido: $content");
+            return 'Sugerencia default: 432 Hz (error de formato)';
+          }
+        }
+        return 'Sugerencia default: 432 Hz (respuesta vacía)';
+      } else {
+        print("Error en la API de OpenAI (proxy): ${response.statusCode} - ${response.body}");
+        return 'Sugerencia default: 432 Hz (error de conexión)'; // Fallback
+      }
+    });
+  }
+
+  // Define un esquema JSON robusto para las recomendaciones de salud [span_29](start_span)[span_29](end_span)
+  Map<String, dynamic> _getRecommendationSchema() {
+    return {
+      "type": "object",
+      "properties": {
+        "sugerencia": {
+          "type": "string",
+          "description": "Recomendación de bienestar personalizada."
+        },
+        "frecuencia_hz": {
+          "type": "number",
+          "description": "Frecuencia en Hz sugerida."
+        },
+        "duracion_minutos": {
+          "type": "integer",
+          "description": "Duración sugerida en minutos."
+        },
+        "confianza": {
+          "type": "string",
+          "enum": ["alta", "media", "baja"],
+          "description": "Nivel de confianza de la recomendación."
+        },
+        "exencion_responsabilidad": {
+          "type": "string",
+          "description": "Exención de responsabilidad médica."
+        }
+      },
+      "required": ["sugerencia", "frecuencia_hz", "duracion_minutos", "confianza", "exencion_responsabilidad"],
+      "additionalProperties": false // Crucial para Structured Outputs [span_30](start_span)[span_30](end_span)
+    };
+  }
+
+  Future<void> ajustarUIProactivo(String feedback) async {
+    // Lógica para actualizar UI basada en feedback (e.g., cambiar colores o alertas) 
+    print("Ajustando UI proactivamente basada en feedback: $feedback");
+  }
+
+  // Implementar un mecanismo de bucle de retroalimentación robusto para el aprendizaje continuo 
+  // Esto implicaría capturar feedback explícito e implícito del usuario y usarlo para refinar las instrucciones del modelo.
+}
+
+// -----------------------------------------------------------------------------
+// lib/controllers/ (Placeholder para controladores/BLoCs/Providers)
+// -----------------------------------------------------------------------------
+// Aquí iría la lógica de negocio y gestión de estado, por ejemplo, usando Riverpod.
+// lib/controllers/frecuencia_controller.dart
+/*
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frecuencia_vital/services/sensores_service.dart';
+import 'package:frecuencia_vital/services/openai_service.dart';
+import 'package:frecuencia_vital/services/backend_service.dart';
+
+final frecuenciaControllerProvider = StateNotifierProvider<FrecuenciaController, AsyncValue<double>>((ref) {
+  return FrecuenciaController(
+    ref.read(sensoresServiceProvider),
+    ref.read(openAIServiceProvider),
+    ref.read(backendServiceProvider),
+  );
+});
+
+final sensoresServiceProvider = Provider((ref) => SensoresService());
+final openAIServiceProvider = Provider((ref) => OpenAIService());
+final backendServiceProvider = Provider((ref) => BackendService());
+
+class FrecuenciaController extends StateNotifier<AsyncValue<double>> {
+  final SensoresService _sensoresService;
+  final OpenAIService _openAIService;
+  final BackendService _backendService;
+
+  FrecuenciaController(this._sensoresService, this._openAIService, this._backendService) : super(const AsyncValue.data(0.0));
+
+  Future<void> escanearYAnalizarFrecuencia() async {
+    state = const AsyncValue.loading();
+    try {
+      final frecuencia = await _sensoresService.capturarFrecuenciaBLE();
+      state = AsyncValue.data(frecuencia);
+
+      // Simular patrón y obtener recomendación de IA
+      final patron = 'estado_calma'; // Esto vendría de un análisis más profundo
+      final recomendacion = await _openAIService.retroalimentacionPersonal(patron, [frecuencia]);
+      print('Recomendación de IA: $recomendacion');
+
+      // Sincronizar con el backend
+      await _backendService.sincronizarFrecuencia(frecuencia, patron);
+
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      print('Error al escanear o analizar frecuencia: $e');
+    }
+  }
+}
+*/
+
+// -----------------------------------------------------------------------------
+// lib/screens/home_screen.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frecuencia_vital/widgets/pulsating_frequency_painter.dart';
+// Importa tus pantallas de módulos
+import 'package:frecuencia_vital/screens/fisico_screen.dart';
+import 'package:frecuencia_vital/screens/emocional_screen.dart';
+import 'package:frecuencia_vital/screens/entorno_screen.dart';
+import 'package:frecuencia_vital/screens/perfil_screen.dart';
+// import 'package:frecuencia_vital/controllers/frecuencia_controller.dart'; // Si usas Riverpod
+
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
+  int _selectedIndex = 0;
+  late AnimationController _animationController;
+  double _currentFrequency = 432.0; // Frecuencia inicial para la visualización
+  double _currentAmplitude = 0.5; // Amplitud inicial para la visualización
+
+  static const List<Widget> _widgetOptions = <Widget>;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2), // Duración de la animación de pulso
+    )..repeat(); // Repetir la animación continuamente
+
+    // Simular cambios de frecuencia y amplitud para la visualización
+    // En una app real, esto vendría de los sensores y la IA
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        _currentFrequency = 528.0; // Cambia la frecuencia
+        _currentAmplitude = 0.8; // Cambia la amplitud
+      });
+    });
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userName = "Alex"; // Nombre de usuario dinámico
+    final size = MediaQuery.of(context).size;
+
+    // final frecuenciaState = ref.watch(frecuenciaControllerProvider); // Si usas Riverpod
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Frecuencia Vital"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children:
+            AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: Size(size.width * 0.6, size.width * 0.6), // Tamaño del visualizador
+                  painter: PulsatingFrequencyPainter(
+                    animationValue: _animationController.value,
+                    frequency: _currentFrequency, // Frecuencia actual
+                    amplitude: _currentAmplitude, // Amplitud actual
+                    screenWidth: size.width, // Pasar ancho de pantalla para cálculo de radio
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {
+                // Lógica para iniciar escaneo o análisis
+                // ref.read(frecuenciaControllerProvider.notifier).escanearYAnalizarFrecuencia(); // Si usas Riverpod
+                print("Iniciando escaneo de frecuencia...");
+                setState(() {
+                  _currentFrequency = 396.0 + (math.Random().nextDouble() * 200); // Simular nueva frecuencia
+                  _currentAmplitude = 0.3 + (math.Random().nextDouble() * 0.7); // Simular nueva amplitud
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlueAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              child: const Text(
+                "Escanear Frecuencia",
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            // Mostrar estado de carga o error si usas Riverpod
+            // if (frecuenciaState.isLoading) const CircularProgressIndicator(),
+            // if (frecuenciaState.hasError) Text('Error: ${frecuenciaState.error}', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/screens/fisico_screen.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+
+class FisicoScreen extends StatelessWidget {
+  const FisicoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Módulo Físico"),
+      ),
+      body: const Center(
+        child: Text(
+          "Aquí se mostrarán los datos físicos y de salud corporal.",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/screens/emocional_screen.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+
+class EmocionalScreen extends StatelessWidget {
+  const EmocionalScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Módulo Emocional"),
+      ),
+      body: const Center(
+        child: Text(
+          "Aquí se explorarán las emociones y los chakras.",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/screens/entorno_screen.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+
+class EntornoScreen extends StatelessWidget {
+  const EntornoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Módulo Entorno"),
+      ),
+      body: const Center(
+        child: Text(
+          "Aquí se analizará la relación con el ambiente y elementos globales.",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/screens/perfil_screen.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+
+class PerfilScreen extends StatelessWidget {
+  const PerfilScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final userName = "Alex"; // Nombre de usuario dinámico
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Módulo Perfil"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children:,
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/widgets/pulsating_frequency_painter.dart
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+import 'dart:math' as math;
+
+class PulsatingFrequencyPainter extends CustomPainter {
+  final double animationValue; // Ciclo animación (0.0 a 1.0)
+  final double frequency; // Frecuencia en Hz
+  final double amplitude; // Amplitud (0.0 a 1.0)
+  final double screenWidth; // Ancho de pantalla para cálculos de radio
+
+  PulsatingFrequencyPainter({
+    required this.animationValue,
+    required this.frequency,
+    required this.amplitude,
+    required this.screenWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // Algoritmo de la animación: calcular un radius dinámico 
+    // visualFrequency = frecuencia de audio / 20 (clamped entre 0.5 y 10 Hz para visibilidad)
+    final double visualFrequency = (frequency / 20).clamp(0.5, 10.0);
+    double baseRadius = screenWidth / 8;
+    double pulse = (math.sin(animationValue * 2 * math.pi * visualFrequency) + 1) / 2; // 0..1
+    double dynamicRadius = baseRadius + pulse * (screenWidth / 10) * amplitude;
+
+    // Color basado en la frecuencia (hue dinámico) 
+    final paint = Paint()
+     ..color = HSVColor.fromAHSV(
+        1.0,
+        frequency % 360, // Hue varía con la frecuencia
+        0.8, // Saturación
+        0.9, // Valor
+      ).toColor()
+     ..style = PaintingStyle.stroke
+     ..strokeWidth = 4;
+
+    // Dibujar 3-5 círculos concéntricos con opacidad decreciente 
+    for (int i = 0; i < 4; i++) { // Dibujar 4 círculos (0 a 3)
+      double r = dynamicRadius * (1 + i * 0.4);
+      paint.color = paint.color.withOpacity((1 - i * 0.2).clamp(0.2, 1.0));
+      canvas.drawCircle(center, r, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant PulsatingFrequencyPainter old) {
+    return old.animationValue!= animationValue ||
+        old.frequency!= frequency ||
+        old.amplitude!= amplitude ||
+        old.screenWidth!= screenWidth;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// lib/utils/ (Placeholder para utilidades)
+// -----------------------------------------------------------------------------
+// Aquí puedes añadir constantes, helpers, etc.
+/*
+// lib/utils/constants.dart
+class AppConstants {
+  static const String appName = "Frecuencia Vital";
+  // Otros constantes
+}
+*/
+
