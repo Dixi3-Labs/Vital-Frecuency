@@ -1,0 +1,42 @@
+name: Build & Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'   # lanzar con tags v1.0.0
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node (if needed)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Build (fallback: zip repo)
+        run: |
+          # Si tu proyecto tiene script de build, ejecútalo aquí (npm, gradle, etc)
+          if [ -f package.json ]; then
+            if jq -e '.scripts.build' package.json >/dev/null 2>&1; then
+              npm ci
+              npm run build
+            fi
+          fi
+          # Empaquetar resultado o todo el repo
+          TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+          zip -r results-$TIMESTAMP.zip . -x .git\* node_modules/\*
+          echo "ARTIFACT=results-$TIMESTAMP.zip" >> $GITHUB_ENV
+      - name: Upload artifact to workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: ${{ env.ARTIFACT }}
+      - name: Create GitHub Release and attach artifact
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name || 'v0.0.0' }}
+          name: Release ${{ github.ref_name || 'manual' }}
+          files: ${{ env.ARTIFACT }}
