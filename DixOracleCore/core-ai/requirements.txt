@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+tensorflow
+torch
+onnxruntime
+opencv-python
+ultralytics
+scikit-learn
+python-multipart
+sentry-sdk
+pillow
