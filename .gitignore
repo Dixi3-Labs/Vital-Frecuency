@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+venv/
+env/
+
+# Build artifacts
+dist/
+build/
+*.pyc
+__pycache__/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Environment
+.env
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android
+*.apk
+*.aab
+.gradle/
+.cxx/
+local.properties
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
