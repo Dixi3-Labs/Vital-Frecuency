@@ -24,6 +24,8 @@ DixOracleCore/
 
 ## Instalación rápida
 
+**Para instrucciones detalladas, consulta [QUICKSTART.md](QUICKSTART.md)**
+
 ### Backend (api-server)
 ```bash
 cd api-server

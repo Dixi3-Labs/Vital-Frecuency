@@ -1,0 +1,26 @@
+{
+  "name": "dix-oracle-core",
+  "version": "1.0.0",
+  "description": "Plataforma multiplataforma para análisis avanzado en tiempo real de partidas MOBA",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:web && npm run install:api && npm run install:desktop",
+    "install:web": "cd web && npm install",
+    "install:api": "cd api-server && npm install",
+    "install:desktop": "cd desktop && npm install",
+    "dev:web": "cd web && npm run dev",
+    "dev:api": "cd api-server && npm run dev",
+    "dev:desktop": "cd desktop && npm start",
+    "build:web": "cd web && npm run build",
+    "lint:web": "cd web && npm run lint"
+  },
+  "keywords": [
+    "moba",
+    "gaming",
+    "analytics",
+    "overlay",
+    "ai"
+  ],
+  "author": "Dixi3 Labs",
+  "license": "UNLICENSED"
+}
