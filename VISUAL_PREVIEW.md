@@ -190,20 +190,26 @@ Inactive:   ─── White/gray
 
 ## Performance Visual
 
+**DISCLAIMER**: These are theoretical estimates based on Flutter's hardware-accelerated 
+rendering capabilities. Actual performance will vary based on device hardware, screen 
+resolution, and other running applications. Always profile on your target devices.
+
 ```
 Frame Budget (60 FPS = 16.67ms per frame)
 ┌──────────────────────────────────────┐
-│ ████ 2ms  - Render Background        │  ← Very efficient
-│ ██   0.5ms - Update animations       │
-│ ███  1ms  - Paint particles          │
-│ ██   0.5ms - Paint stars             │
-│ ██   0.5ms - Paint planets           │
-│ █    0.3ms - Paint waves             │
-│ ████ 2ms  - Render UI content        │
+│ ████ 2ms  - Render Background        │  ← Estimated
+│ ██   0.5ms - Update animations       │  ← Estimated
+│ ███  1ms  - Paint particles          │  ← Estimated
+│ ██   0.5ms - Paint stars             │  ← Estimated
+│ ██   0.5ms - Paint planets           │  ← Estimated
+│ █    0.3ms - Paint waves             │  ← Estimated
+│ ████ 2ms  - Render UI content        │  ← Estimated
 │                                      │
-│ Total: ~7ms (well within 16.67ms)   │
+│ Total: ~7ms (well within 16.67ms)   │  ← Theoretical
 └──────────────────────────────────────┘
-                                    ✅ Smooth 60 FPS
+                                    ✅ Target: Smooth 60 FPS
+                                    
+⚠️  Use Flutter DevTools to measure actual performance on your target devices.
 ```
 
 ## Responsive Behavior
